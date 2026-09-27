@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zohran — Personal Dashboard</title>
+<style>
+:root{
+  --bg:#090b10; --panel:#11151d; --panel2:#151a24; --line:#252c38;
+  --text:#f4f7fb; --muted:#8d97a8; --accent:#7c6cff; --accent2:#24d6a0;
+  --danger:#ff5d73; --shadow:0 20px 60px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;background:
+radial-gradient(circle at 80% 0%,rgba(124,108,255,.14),transparent 28%),
+radial-gradient(circle at 20% 100%,rgba(36,214,160,.08),transparent 30%),var(--bg);color:var(--text)}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;padding:24px 16px;border-right:1px solid var(--line);background:rgba(9,11,16,.82);backdrop-filter:blur(18px);position:fixed;inset:0 auto 0 0;z-index:10}
+.logo{display:flex;align-items:center;gap:12px;padding:6px 10px 28px;font-weight:800;font-size:20px}
+.logoMark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#8c7dff,#5144db);display:grid;place-items:center;box-shadow:0 8px 24px rgba(124,108,255,.35)}
+.nav{display:grid;gap:6px}
+.nav button{border:0;background:transparent;color:var(--muted);padding:12px 14px;border-radius:12px;text-align:left;display:flex;gap:12px;align-items:center;transition:.2s}
+.nav button:hover,.nav button.active{background:var(--panel2);color:var(--text);transform:translateX(2px)}
+.nav button.active{box-shadow:inset 3px 0 var(--accent)}
+.bottomNav{position:absolute;bottom:20px;left:16px;right:16px}
+.main{margin-left:250px;width:calc(100% - 250px);padding:28px 34px 50px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:30px}
+.eyebrow{color:var(--accent2);font-size:12px;text-transform:uppercase;letter-spacing:1.7px;font-weight:800}
+h1{margin:4px 0 0;font-size:32px;letter-spacing:-1px}
+.clock{color:var(--muted);font-size:14px}
+.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#7c6cff,#24d6a0);font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px}
+.card{background:linear-gradient(180deg,rgba(21,26,36,.96),rgba(15,19,27,.96));border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow);animation:rise .55s ease both}
+.card:hover{border-color:#343d4c}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.stat{grid-column:span 3;min-height:135px}
+.chartCard{grid-column:span 8}
+.sideCard{grid-column:span 4}
+.wide{grid-column:span 8}
+.full{grid-column:1/-1}
+.cardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.cardTitle{font-weight:750;font-size:15px}
+.muted{color:var(--muted)}
+.statNum{font-size:31px;font-weight:800;margin:12px 0 7px}
+.trend{font-size:12px;color:var(--accent2)}
+.trend.down{color:var(--danger)}
+canvas{width:100%;height:245px;display:block}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#191f2a;color:var(--text);border-radius:10px;padding:9px 13px;transition:.2s}
+.btn:hover{transform:translateY(-1px);background:#222a38}
+.btn.primary{background:var(--accent);border-color:var(--accent)}
+.btn.danger{color:#ff9aaa}
+.progress{height:8px;background:#202631;border-radius:20px;overflow:hidden;margin:14px 0}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#9b90ff);border-radius:20px;transition:width .5s}
+.task{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.task:last-child{border-bottom:0}
+.check{width:20px;height:20px;border:1px solid #465061;border-radius:6px;display:grid;place-items:center;background:transparent;color:white}
+.task.done .check{background:var(--accent);border-color:var(--accent)}
+.task.done .taskText{text-decoration:line-through;color:#687384}
+.taskText{flex:1}
+.badge{font-size:11px;color:#a9a1ff;background:rgba(124,108,255,.12);padding:5px 8px;border-radius:20px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dayName{text-align:center;color:var(--muted);font-size:11px;padding-bottom:6px}
+.day{min-height:39px;border:1px solid transparent;border-radius:10px;display:grid;place-items:center;color:#b8c0cd;position:relative}
+.day:hover{background:#1a202b}
+.day.today{background:rgba(124,108,255,.2);color:white;border-color:rgba(124,108,255,.5);font-weight:800}
+.dot{position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:var(--accent2)}
+.noteArea{width:100%;min-height:180px;resize:vertical;background:#0c1017;border:1px solid var(--line);border-radius:14px;color:var(--text);padding:14px;outline:none;transition:.2s}
+.noteArea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,108,255,.1)}
+.noteStatus{font-size:12px;color:var(--muted);margin-top:8px}
+.quickInput{display:flex;gap:8px;margin-bottom:10px}
+.quickInput input{flex:1;background:#0c1017;border:1px solid var(--line);color:white;border-radius:10px;padding:10px;outline:none}
+.empty{color:var(--muted);padding:15px 0;font-size:14px}
+.section{display:none}
+.section.active{display:block}
+.mobile{display:none}
+.toast{position:fixed;right:24px;bottom:24px;background:#1c2330;border:1px solid #354052;color:white;padding:12px 16px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s;z-index:50}
+.toast.show{opacity:1;transform:none}
+@media(max-width:1000px){
+ .sidebar{width:210px}.main{margin-left:210px;width:calc(100% - 210px);padding:24px}
+ .stat{grid-column:span 6}.chartCard,.wide{grid-column:1/-1}.sideCard{grid-column:span 6}
+}
+@media(max-width:700px){
+ .sidebar{display:none}.main{margin:0;width:100%;padding:20px 14px 90px}.mobile{display:flex}
+ .stat,.sideCard{grid-column:1/-1}.topbar{align-items:flex-start}
+ .mobileNav{position:fixed;bottom:12px;left:12px;right:12px;background:#151a24ee;border:1px solid var(--line);backdrop-filter:blur(15px);border-radius:16px;padding:8px;display:flex;justify-content:space-around;z-index:20}
+ .mobileNav button{background:none;border:0;color:var(--muted);font-size:20px;padding:8px}
+ .mobileNav button.active{color:white}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo"><div class="logoMark">N</div><span>Zohran</span></div>
+  <nav class="nav">
+    <button class="active" data-page="dashboard">◈ <span>Dashboard</span></button>
+    <button data-page="calendar">▣ <span>Calendar</span></button>
+    <button data-page="tasks">✓ <span>Tasks</span></button>
+    <button data-page="notes">✎ <span>Notes</span></button>
+    <button data-page="analytics">◒ <span>Analytics</span></button>
+  </nav>
+  <div class="bottomNav nav">
+    <button id="themeBtn">☾ <span>Dark mode</span></button>
+    <button id="clearBtn">↺ <span>Reset data</span></button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">Zohran's workspace</div>
+      <h1 id="pageTitle">Welcome back, Zohran.</h1>
+      <div class="clock" id="clock"></div>
+    </div>
+    <div class="avatar">N</div>
+  </div>
+
+  <section id="dashboard" class="section active">
+    <div class="grid">
+      <div class="card stat" style="grid-column:span 6">
+        <div class="cardHead">
+          <div><div class="cardTitle">💰 Money tracker</div><div class="muted">Your AED balance</div></div>
+          <span class="badge">AED</span>
+        </div>
+        <div class="statNum" id="moneyBalance">AED 0</div>
+        <div class="quickInput">
+          <input id="moneyInput" type="number" min="0" step="0.01" placeholder="Enter amount">
+          <button class="btn primary" onclick="addMoney()">+ Add</button>
+        </div>
+        <div class="muted" id="moneyMessage">Ready to track your money.</div>
+      </div>
+      <div class="card stat" style="grid-column:span 6">
+        <div class="muted">Monthly income</div><div class="statNum">$8,420</div><div class="trend">↑ 12.8% this month</div></div>
+      <div class="card stat"><div class="muted">Savings</div><div class="statNum">$3,180</div><div class="trend">↑ 8.4% this month</div></div>
+      <div class="card stat"><div class="muted">Projects</div><div class="statNum">12</div><div class="trend">3 completed</div></div>
+      <div class="card stat"><div class="muted">Focus time</div><div class="statNum">31h</div><div class="trend down">↓ 4.2% this week</div></div>
+
+      <div class="card chartCard">
+        <div class="cardHead"><div><div class="cardTitle">Activity overview</div><div class="muted">Monthly activity</div></div><span class="badge">2026</span></div>
+        <canvas id="activityChart"></canvas>
+      </div>
+
+      <div class="card sideCard">
+        <div class="cardHead"><div class="cardTitle">Today's progress</div><span id="percent">72%</span></div>
+        <div class="muted">You are on track for your daily goals.</div>
+        <div class="progress"><i id="progressBar" style="width:72%"></i></div>
+        <div class="actions">
+          <button class="btn primary" onclick="showPage('tasks')">View tasks</button>
+          <button class="btn" onclick="addQuickTask()">+ Task</button>
+        </div>
+      </div>
+
+      <div class="card wide">
+        <div class="cardHead"><div class="cardTitle">Money history</div><button class="btn" onclick="clearMoney()">Reset</button></div>
+        <div id="moneyHistory"></div>
+      </div>
+
+      <div class="card wide">
+        <div class="cardHead"><div class="cardTitle">Tasks</div><button class="btn" onclick="showPage('tasks')">Open all</button></div>
+        <div id="dashTasks"></div>
+      </div>
+
+      <div class="card sideCard">
+        <div class="cardHead"><div class="cardTitle">Upcoming</div><button class="btn" onclick="showPage('calendar')">Calendar</button></div>
+        <div class="task"><div>🗓️</div><div class="taskText"><b>Project review</b><br><span class="muted">Tomorrow · 10:00</span></div></div>
+        <div class="task"><div>💡</div><div class="taskText"><b>Idea session</b><br><span class="muted">Wednesday · 15:30</span></div></div>
+        <div class="task"><div>☕</div><div class="taskText"><b>Coffee meeting</b><br><span class="muted">Friday · 09:30</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="calendar" class="section">
+    <div class="grid">
+      <div class="card full">
+        <div class="cardHead">
+          <div><div class="cardTitle" id="monthTitle"></div><div class="muted">Your monthly view</div></div>
+          <div class="actions"><button class="btn" onclick="changeMonth(-1)">←</button><button class="btn" onclick="goToday()">Today</button><button class="btn" onclick="changeMonth(1)">→</button></div>
+        </div>
+        <div class="calendar" id="calendarGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tasks" class="section">
+    <div class="grid">
+      <div class="card full">
+        <div class="cardHead"><div><div class="cardTitle">Task manager</div><div class="muted">Add, complete and remove tasks.</div></div></div>
+        <div class="quickInput"><input id="taskInput" placeholder="What needs to be done?"><button class="btn primary" onclick="addTask()">Add task</button></div>
+        <div id="allTasks"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="notes" class="section">
+    <div class="grid">
+      <div class="card full">
+        <div class="cardHead"><div><div class="cardTitle">Quick notes</div><div class="muted">Your notes are saved automatically in this browser.</div></div><button class="btn primary" onclick="saveNote()">Save now</button></div>
+        <textarea id="notesBox" class="noteArea" placeholder="Write an idea, reminder, meeting notes..."></textarea>
+        <div class="noteStatus" id="noteStatus">Autosave is on.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="analytics" class="section">
+    <div class="grid">
+      <div class="card chartCard">
+        <div class="cardHead"><div><div class="cardTitle">Weekly focus</div><div class="muted">Hours spent on focused work</div></div></div>
+        <canvas id="focusChart"></canvas>
+      </div>
+      <div class="card sideCard">
+        <div class="cardTitle">Highlights</div>
+        <div class="task"><div>⚡</div><div class="taskText"><b>31 hours</b><br><span class="muted">Focused work</span></div></div>
+        <div class="task"><div>✓</div><div class="taskText"><b>18 tasks</b><br><span class="muted">Completed</span></div></div>
+        <div class="task"><div>📌</div><div class="taskText"><b>6 projects</b><br><span class="muted">Active</span></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div class="mobileNav">
+  <button class="active" data-page="dashboard">⌂</button>
+  <button data-page="calendar">▣</button>
+  <button data-page="tasks">✓</button>
+  <button data-page="notes">✎</button>
+  <button data-page="analytics">◒</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const pages = ["dashboard","calendar","tasks","notes","analytics"];
+let tasks = JSON.parse(localStorage.getItem("novaTasks") || "null") || [
+  {text:"Finish dashboard design",done:true},
+  {text:"Review monthly budget",done:false},
+  {text:"Plan next week's priorities",done:false},
+  {text:"Read 20 pages",done:false}
+];
+let viewDate = new Date();
+const $ = id => document.getElementById(id);
+
+function showPage(page){
+  pages.forEach(p => $(p).classList.toggle("active", p===page));
+  document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
+  const titles={dashboard:"Welcome back, Zohran.",calendar:"Your calendar.",tasks:"Stay on top of things.",notes:"Your workspace.",analytics:"Your analytics."};
+  $("pageTitle").textContent=titles[page];
+  if(page==="calendar") renderCalendar();
+  if(page==="tasks") renderTasks();
+  if(page==="dashboard") renderDashboardTasks();
+  if(page==="analytics") drawCharts();
+}
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+
+function updateClock(){
+  const d=new Date();
+  $("clock").textContent=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})+" · "+d.toLocaleTimeString(undefined,{hour:"2-digit",minute:"2-digit"});
+}
+setInterval(updateClock,1000); updateClock();
+
+
+let money = Number(localStorage.getItem("novaMoney") || 0);
+let moneyHistory = JSON.parse(localStorage.getItem("novaMoneyHistory") || "[]");
+
+function renderMoney(){
+  $("moneyBalance").textContent = "AED " + money.toFixed(2).replace(/\.00$/,"");
+  $("moneyHistory").innerHTML = moneyHistory.length
+    ? moneyHistory.slice().reverse().map(x =>
+      `<div class="task"><div>💵</div><div class="taskText"><b>+ AED ${x.amount.toFixed(2).replace(/\.00$/,"")}</b><br><span class="muted">${x.date}</span></div><span class="badge">Added</span></div>`
+    ).join("")
+    : '<div class="empty">No money added yet.</div>';
+}
+function addMoney(){
+  const input=$("moneyInput");
+  const amount=Number(input.value);
+  if(!amount || amount<=0){toast("Enter an amount greater than 0");return;}
+  money += amount;
+  moneyHistory.push({amount,date:new Date().toLocaleString()});
+  localStorage.setItem("novaMoney",money);
+  localStorage.setItem("novaMoneyHistory",JSON.stringify(moneyHistory));
+  input.value="";
+  $("moneyMessage").textContent=`Added AED ${amount.toFixed(2).replace(/\.00$/,"")} — new balance: AED ${money.toFixed(2).replace(/\.00$/,"")}`;
+  renderMoney();
+  toast("Money added ✓");
+}
+function clearMoney(){
+  if(confirm("Reset your money balance and history?")){
+    money=0; moneyHistory=[];
+    localStorage.removeItem("novaMoney");
+    localStorage.removeItem("novaMoneyHistory");
+    $("moneyMessage").textContent="Ready to track your money.";
+    renderMoney(); toast("Money reset");
+  }
+}
+$("moneyInput").addEventListener("keydown",e=>{if(e.key==="Enter")addMoney()});
+
+function saveTasks(){localStorage.setItem("novaTasks",JSON.stringify(tasks));}
+function taskHTML(t,i){
+ return `<div class="task ${t.done?"done":""}">
+   <button class="check" onclick="toggleTask(${i})">${t.done?"✓":""}</button>
+   <div class="taskText">${escapeHTML(t.text)}</div>
+   <button class="btn danger" onclick="removeTask(${i})">Remove</button>
+ </div>`;
+}
+function renderTasks(){
+ $("allTasks").innerHTML=tasks.length?tasks.map(taskHTML).join(""):'<div class="empty">No tasks yet. Add one above.</div>';
+}
+function renderDashboardTasks(){
+ $("dashTasks").innerHTML=tasks.slice(0,4).map(taskHTML).join("");
+}
+function toggleTask(i){tasks[i].done=!tasks[i].done;saveTasks();renderTasks();renderDashboardTasks();updateProgress();toast(tasks[i].done?"Task completed ✓":"Task reopened");}
+function removeTask(i){tasks.splice(i,1);saveTasks();renderTasks();renderDashboardTasks();updateProgress();toast("Task removed");}
+function addTask(){
+ const input=$("taskInput"), text=input.value.trim(); if(!text)return;
+ tasks.push({text,done:false});input.value="";saveTasks();renderTasks();renderDashboardTasks();updateProgress();toast("Task added");
+}
+function addQuickTask(){showPage("tasks");setTimeout(()=>$("taskInput").focus(),50)}
+$("taskInput").addEventListener("keydown",e=>{if(e.key==="Enter")addTask()});
+function updateProgress(){
+ const done=tasks.filter(t=>t.done).length, total=Math.max(tasks.length,1), p=Math.round(done/total*100);
+ $("progressBar").style.width=p+"%";$("percent").textContent=p+"%";
+}
+function escapeHTML(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+
+function renderCalendar(){
+ const y=viewDate.getFullYear(),m=viewDate.getMonth();
+ $("monthTitle").textContent=viewDate.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+ const first=new Date(y,m,1).getDay(), days=new Date(y,m+1,0).getDate();
+ const names=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+ let out=names.map(n=>`<div class="dayName">${n}</div>`).join("");
+ for(let i=0;i<first;i++)out+="<div></div>";
+ const now=new Date();
+ for(let d=1;d<=days;d++){
+   const today=d===now.getDate()&&m===now.getMonth()&&y===now.getFullYear();
+   const has=d%5===0||d===now.getDate()+1;
+   out+=`<div class="day ${today?"today":""}" onclick="toast('Selected ${d} ${viewDate.toLocaleDateString(undefined,{month:'short'})}')">${d}${has?'<span class="dot"></span>':""}</div>`;
+ }
+ $("calendarGrid").innerHTML=out;
+}
+function changeMonth(n){viewDate.setMonth(viewDate.getMonth()+n);renderCalendar()}
+function goToday(){viewDate=new Date();renderCalendar()}
+
+let notesTimer;
+$("notesBox").value=localStorage.getItem("novaNotes")||"";
+$("notesBox").addEventListener("input",()=>{
+ clearTimeout(notesTimer);
+ $("noteStatus").textContent="Saving...";
+ notesTimer=setTimeout(saveNote,500);
+});
+function saveNote(){localStorage.setItem("novaNotes",$("notesBox").value);$("noteStatus").textContent="Saved just now ✓";toast("Note saved");}
+
+function setupCanvas(canvas){
+ const ratio=window.devicePixelRatio||1, rect=canvas.getBoundingClientRect();
+ canvas.width=rect.width*ratio;canvas.height=rect.height*ratio;
+ const c=canvas.getContext("2d");c.scale(ratio,ratio);return {c,w:rect.width,h:rect.height};
+}
+function lineChart(id,labels,data){
+ const {c,w,h}=setupCanvas($(id)); const pad={l:34,r:18,t:18,b:34};
+ c.clearRect(0,0,w,h); c.font="12px system-ui";
+ const max=Math.max(...data)*1.18,min=0, innerW=w-pad.l-pad.r,innerH=h-pad.t-pad.b;
+ c.strokeStyle="#252c38";c.lineWidth=1;
+ for(let i=0;i<5;i++){let y=pad.t+i*innerH/4;c.beginPath();c.moveTo(pad.l,y);c.lineTo(w-pad.r,y);c.stroke();}
+ const pts=data.map((v,i)=>({x:pad.l+i*innerW/(data.length-1),y:pad.t+innerH-(v-min)/(max-min)*innerH}));
+ c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle="#8c7dff";c.lineWidth=3;c.stroke();
+ pts.forEach((p,i)=>{c.beginPath();c.arc(p.x,p.y,4,0,Math.PI*2);c.fillStyle="#8c7dff";c.fill();c.fillStyle="#8d97a8";c.textAlign="center";c.fillText(labels[i],p.x,h-10)});
+}
+function drawCharts(){
+ requestAnimationFrame(()=>{
+  lineChart("activityChart",["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep"],[42,55,49,68,61,75,70,88,82]);
+  lineChart("focusChart",["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],[4.2,5.1,3.8,6.4,5.7,2.4,3.6]);
+ });
+}
+window.addEventListener("resize",()=>{if($("dashboard").classList.contains("active")||$("analytics").classList.contains("active"))drawCharts()});
+
+$("themeBtn").onclick=()=>{document.body.classList.toggle("light");toast("Dark mode is the default theme")};
+$("clearBtn").onclick=()=>{if(confirm("Reset your tasks and notes?")){localStorage.removeItem("novaTasks");localStorage.removeItem("novaNotes");location.reload()}};
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+
+renderDashboardTasks();renderTasks();renderCalendar();updateProgress();renderMoney();drawCharts();
+</script>
+</body>
+</html>
